@@ -1,3 +1,4 @@
+$(function(){
 var minlen = 80;
 var sliderValue = 0;
 var basepairWidth = 12;
@@ -804,3 +805,4 @@ function calculateAllORFs_internal(sequence) {
 	}
 	return ret;
 }
+});
