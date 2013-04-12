@@ -4,3 +4,6 @@
 [submodule "jquery"]
 	path = jquery
 	url = https://github.com/jquery/jquery.git
+[submodule ".idea"]
+	path = .idea
+	url = git@github.com:iceraj/starorf_html_idea.git
