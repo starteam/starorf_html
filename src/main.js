@@ -103,7 +103,7 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
         }
         if (config.show_minimal_orf_length_button) {
             html += "<button id='" + config.minimal_orf_length_button_id + "' class='StarX_StarORF_input_sequence_minimal_length_button'>Change ORF Length</button>";
-            
+
         }
         if (config.show_reverse_complement) {
             html += "<button id='" + config.reverse_complement_id + "' class='StarX_StarORF_reverse_complement_button'>Reverse Complement</button>";
