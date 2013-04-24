@@ -47,6 +47,10 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
         return $("#" + str);
     }
 
+    function trim(seq) {
+    	return seq.replace(/[^atgcu]/mig, '').replace(/t/mig, 'u').toUpperCase();
+    }
+
     function load_sequence() {
         $.ajax({
             url: config.sequence,
