@@ -4,7 +4,7 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
 
     function parse_config(config_obj) {
         config.element_id = config_obj.element_id;
-        config.sequence = config_obj.sequence ? config_obj.sequence : "/StarX/StarORF/sequence.txt";
+        config.sequence = config_obj.sequence ? config_obj.sequence : "/StarORF/sequence.txt";
 
         config.sequence_id = config.element_id + "_sequence";
         config.length_id = config.element_id + "_length";
@@ -48,7 +48,7 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
     }
 
     function trim(seq) {
-    	return seq.replace(/[^atgcu]/mig, '').replace(/t/mig, 'u').toUpperCase();
+        return seq.replace(/[^atgcu]/mig, '').replace(/t/mig, 'u').toUpperCase();
     }
 
     function load_sequence() {
@@ -63,7 +63,8 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
 
     function initialize_UI() {
         var element = $('#' + config.element_id);
-
+        element.off('change', '#' + config.sequence_id);
+        
         var html = '';
         var closures = [];
         if (config.show_input_sequence_title) {
@@ -77,7 +78,7 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
         if (config.show_sequence_length) {
             html += "<span class='StarX_StarORF_input_sequence_length'>Sequence length is <span id='" + config.length_id + "'>0</span> bp.</span>";
             closures.push(function () {
-                $q(config.sequence_id).unbind('change').bind('change', function () {
+                element.on('change', '#' + config.sequence_id, function () {
                     $q(config.length_id).html($(this).val().length);
                 });
             })
@@ -85,7 +86,7 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
         if (config.show_gc_percentage) {
             html += "<span class='StarX_StarORF_input_sequence_gc_percentage'>Percentage of GC is <span id='" + config.gc_percentage_id + "'>0</span>%.</span>"
             closures.push(function () {
-                $q(config.sequence_id).unbind('change').bind('change', function () {
+                element.on('change', '#' + config.sequence_id, function () {
                     var sequence = $(this).val();
                     var gc = 0;
                     for (var i = 0; i < sequence.length; i++) {
@@ -103,7 +104,7 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
             })
         }
         if (config.show_minimal_orf_length) {
-            html += "<span class='StarX_StarORF_input_sequence_minimal_length'>Current minimal ORF length is <span id='" + config.minimal_orf_length_id + "'>"+config.initial_minimal_orf_legth+"</span> bp.</span>"
+            html += "<span class='StarX_StarORF_input_sequence_minimal_length'>Current minimal ORF length is <span id='" + config.minimal_orf_length_id + "'>" + config.initial_minimal_orf_legth + "</span> bp.</span>"
         }
         if (config.show_minimal_orf_length_button) {
             html += "<button id='" + config.minimal_orf_length_button_id + "' class='StarX_StarORF_input_sequence_minimal_length_button'>Change ORF Length</button>";
