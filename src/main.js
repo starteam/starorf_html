@@ -1,4 +1,5 @@
-define([ "StarORF/aminoacids"], function (AminoAcids) {
+define([ "StarORF/aminoacids",'jquery','jquery-ui'], function (AminoAcids,$) {
+    window.jQ = $
     console.info(AminoAcids);
     var config = {};
 
@@ -64,7 +65,7 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
     function initialize_UI() {
         var element = $('#' + config.element_id);
         element.off('change', '#' + config.sequence_id);
-        
+
         var html = '';
         var closures = [];
         if (config.show_input_sequence_title) {
@@ -122,6 +123,9 @@ define([ "StarORF/aminoacids"], function (AminoAcids) {
         html += "<canvas id='" + config.canvas_id + "' class='canvas' style='width:100%; height:300px; border-color:black; border-width:1px;border-style:solid;display:block;' width=1000 height=300></canvas>";
         if (config.show_slider) {
             html += "<div id='" + config.slider_id + "'></div>";
+            closures.push(function() {
+                $('#'+config.slider_id).slider();
+            })
         }
         if (config.show_putative_orf) {
             html += "<textarea id='" + config.putative_orf_id + "' style='width:100%;height:100;'></textarea>";
