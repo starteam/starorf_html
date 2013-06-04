@@ -3,6 +3,8 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
     var config = {};
     var decodedForward = null;
     var decodedReverse = null;
+    var sequence = "";
+    var sliderValue = 0 ;
 
     function parse_config(config_obj) {
         config.element_id = config_obj.element_id;
@@ -191,14 +193,35 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
 
     function recalculate() {
         console.info("Sequence Changed - recalculate");
-        this.sequence = trim($(this).val());
-        decodedForward = decode(this.sequence, config.initial_minimal_orf_legth);
-        decodedReverse = decode(reverseComplementString(this.sequence), config.initial_minimal_orf_legth);
-        paint(this.sequence);
+        sequence = trim($(this).val());
+        decodedForward = decode(sequence, config.initial_minimal_orf_legth);
+        decodedReverse = decode(reverseComplementString(sequence), config.initial_minimal_orf_legth);
+        paint(sequence);
     }
 
     function canvas_click(x, y, origin) {
-        console.info("Canvas click")
+        if( y <= 100 )
+        {
+            var canvas = document.getElementById(config.canvas_id);
+            var width = canvas.width;
+            var bpi = Math.round((sequence.length - width / basepairWidth) * x / width);
+            if (bpi < 0) {
+                bpi = 0;
+            }
+            if (bpi > sequence.length) {
+                bpi = sequence.length;
+            }
+            console.info("Canvas click on BPI: " + bpi );
+            sliderValue = bpi;
+            paint(sequence);
+        } else if( y >= 100 && origin != null )
+        {
+
+        } else if( y >= 100 && origin == null)
+        {
+
+        }
+        console.info("Canvas click " + x + " " + y + " " + origin ) ;
     }
 
     function initialize_UI() {
@@ -283,12 +306,34 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         }
         html += "<canvas id='" + config.canvas_id + "' class='canvas' style='width:100%; height:300px; border-color:black; border-width:1px;border-style:solid;display:block;' width=1000 height=300></canvas>";
         closures.push(function () {
+            var orig;
             element.on('click', '#' + config.canvas_id, function (e) {
                 var canvas = this;
                 var x = (e.pageX - canvas.offsetLeft);
                 var y = (e.pageY - canvas.offsetTop);
                 canvas_click(x, y, null);
             });
+            element.on('mousedown','#' + config.canvas_id, function (e) {
+                var canvas = this;
+                orig = {
+                    x: (e.pageX - canvas.offsetLeft),
+                    y: (e.pageY - canvas.offsetTop)
+                }
+                return false;
+            });
+            element.on('mouseup','#' + config.canvas_id, function (e) {
+                orig = null;
+                return false;
+            });
+            element.on('mousemove','#' + config.canvas_id, function (e) {
+                if (orig != null) {
+                var canvas = this;
+                var x = (e.pageX - canvas.offsetLeft);
+                var y = (e.pageY - canvas.offsetTop);
+                canvas_click(x, y, orig);
+            }
+            });
+
         });
         closures.push(function () {
             element.on('change', '#' + config.sequence_id, recalculate );
@@ -484,8 +529,6 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         }
 
     }
-
-    var sliderValue = 0 ;
 
     function paintWholeSequence(sequence, canvas, width, height, g) {
         if (decodedForward == null || decodedReverse == null) {
