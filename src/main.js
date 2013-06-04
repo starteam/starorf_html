@@ -336,7 +336,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         var g = canvas.getContext('2d');
 
         clearCanvas(canvas, width, height, g);
-        if (sequence != baselineSequence || baselineLength != minlen || baselineImage == null) {
+        if (sequence != baselineSequence || baselineLength != config.initial_minimal_orf_legth || baselineImage == null) {
             paintWholeSequence(sequence, canvas, width, height, g);
             baselineImage = g.getImageData(0, 0, width, height);
             baselineSequence = sequence;
