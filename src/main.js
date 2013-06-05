@@ -4,7 +4,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
     var decodedForward = null;
     var decodedReverse = null;
     var sequence = "";
-    var sliderValue = 0 ;
+    var sliderValue = 0;
 
     function parse_config(config_obj) {
         config.element_id = config_obj.element_id;
@@ -196,6 +196,26 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         sequence = trim($(this).val());
         decodedForward = decode(sequence, config.initial_minimal_orf_legth);
         decodedReverse = decode(reverseComplementString(sequence), config.initial_minimal_orf_legth);
+
+        if (config.show_slider) {
+            var scrollbar = $('#' + config.slider_id)
+            var canvas = $('#'+config.canvas_id);
+            var canvasWidth = canvas.width();
+            var sequenceWidth = (1 + sequence.length) * basepairWidth;
+            var visible = canvasWidth / sequenceWidth;
+            if (visible > 1) {
+                visible = 1;
+            }
+            var newWidth = Math.round(visible * scrollbar.width());
+            if (newWidth < 1) {
+                newWidth = 1;
+            }
+            scrollbar.slider('option', 'min', 0);
+            scrollbar.slider('option', 'max', Math.round(sequence.length - canvasWidth / basepairWidth));
+            scrollbar.slider('option', 'value', sequence.length / 4);
+            sliderValue = sequence.length / 4;
+
+        }
         paint(sequence);
     }
 
@@ -333,13 +353,19 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
 
         });
         closures.push(function () {
-            element.on('change', '#' + config.sequence_id, recalculate );
+            element.on('change', '#' + config.sequence_id, recalculate);
         });
 
         if (config.show_slider) {
             html += "<div id='" + config.slider_id + "'></div>";
             closures.push(function () {
-                $q(config.slider_id).slider();
+                var slider = $q(config.slider_id);
+                slider.slider();
+                slider.slider('option', 'slide', function (e) {
+                    var value = $(this).slider('option', 'value');
+                    sliderValue = value;
+                    paint(sequence);
+                });
             })
         }
         if (config.show_putative_orf) {
