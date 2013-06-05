@@ -442,9 +442,20 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         }
         if (config.show_blast_putative_orf) {
             html += "<button id='" + config.blast_putative_orf_id + "'>Blast</button>";
+            closures.push(function() {
+                $q(config.blast_putative_orf_id).button().click(function() {
+                    var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY='+orf.decoded;
+                    window.open(link, 'blast');
+                });
+            })
         }
         if (config.show_calculate_all_orfs) {
             html += "<div id='" + config.all_orfs_id + "'></div>";
+            closures.push(function () {
+                element.on('change', '#' + config.sequence_id, function () {
+                    $q(config.all_orfs_id).html('');
+                });
+            })
         }
         $(element).html(html);
 
