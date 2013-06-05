@@ -221,6 +221,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
 
     function canvas_click(x, y, origin) {
         if (y <= 100) {
+            // click on the whole sequence view
             var canvas = document.getElementById(config.canvas_id);
             var width = canvas.width;
             var bpi = Math.round((sequence.length - width / basepairWidth) * x / width);
@@ -234,9 +235,10 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
             sliderValue = bpi;
             paint(sequence);
         } else if (y >= 100 && origin == null) {
-
+            // click to decode
 
         } else if (y >= 100 && origin != null) {
+            // drag to scroll
             var slide = x - origin.x;
             if (Math.abs(slide) > basepairWidth) {
                 var steps = Math.round(slide / basepairWidth);
