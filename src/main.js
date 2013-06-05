@@ -5,6 +5,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
     var decodedReverse = null;
     var sequence = "";
     var sliderValue = 0;
+    var orf = {};
 
     function parse_config(config_obj) {
         config.element_id = config_obj.element_id;
@@ -236,7 +237,29 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
             paint(sequence);
         } else if (y >= 100 && origin == null) {
             // click to decode
+            var steps = Math.round(x / basepairWidth);
+            var bpi = sliderValue + steps - 1;
+            var row = Math.ceil((y - 135) / aminoacidHeight);
+            if (row >= 1 && row <= 3) {
+                var range = decodedForward[row - 1][bpi];
+                var putativeORF = {
+                    from: range.from,
+                    to: range.to,
+                    forward: true
+                };
+                decode_putative_ORF(putativeORF);
+                console.info("decode forward on bpi: " + bpi + " row:" + row + " " + range.from + "-" + range.to);
+            } else if (row >= 5 && row <= 7) {
+                var range = decodedReverse[row - 5][sequence.length - bpi];
+                var putativeORF = {
+                    from: range.from,
+                    to: range.to,
+                    forward: false
+                };
+                decode_putative_ORF(putativeORF);
+                console.info("decode reverse on bpi: " + bpi + " row:" + row + " " + range.from + "-" + range.to);
 
+            }
         } else if (y >= 100 && origin != null) {
             // drag to scroll
             var slide = x - origin.x;
@@ -250,6 +273,41 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
             }
         }
         console.info("Canvas click " + x + " " + y + " " + origin);
+    }
+
+    function decode_putative_ORF(putativeORF) {
+        if (putativeORF.from && putativeORF.to) {
+            var from = putativeORF.from;
+            var to = putativeORF.to;
+            var forward = putativeORF.forward;
+
+            if (!forward) {
+                sequence = reverseComplementString(sequence);
+            }
+
+            var decoded = '';
+            for (var bpi = from + 3; bpi < to; bpi += 3) {
+                var str = sequence.substring(bpi, bpi + 3);
+                var codon = CodonMap[str];
+
+                if (config.initial_letter_code_type != 3) {
+                    decoded += AminoAcids[codon].shortName;
+                } else {
+                    decoded += codon + ' ';
+
+                }
+            }
+            orf = {
+                from: from,
+                to: to,
+                forward: forward,
+                decoded: decoded
+            };
+            if (config.show_putative_orf) {
+                $q(config.putative_orf_id).html(decoded);
+            }
+
+        }
     }
 
     function initialize_UI() {
@@ -324,9 +382,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
                     } else {
                         $q(config.toggle_3_1_letter_code_id).button('option', 'label', '1 letter code');
                     }
-//                    if (putativeORF != null) {
-//                        decodePutativeORF();
-//                    }
+                    decode_putative_ORF(orf);
                 };
                 $q(config.toggle_3_1_letter_code_id).button().click(set_toggle);
                 set_toggle();
