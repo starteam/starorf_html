@@ -200,8 +200,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
     }
 
     function canvas_click(x, y, origin) {
-        if( y <= 100 )
-        {
+        if (y <= 100) {
             var canvas = document.getElementById(config.canvas_id);
             var width = canvas.width;
             var bpi = Math.round((sequence.length - width / basepairWidth) * x / width);
@@ -211,17 +210,15 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
             if (bpi > sequence.length) {
                 bpi = sequence.length;
             }
-            console.info("Canvas click on BPI: " + bpi );
+            console.info("Canvas click on BPI: " + bpi);
             sliderValue = bpi;
             paint(sequence);
-        } else if( y >= 100 && origin != null )
-        {
+        } else if (y >= 100 && origin != null) {
 
-        } else if( y >= 100 && origin == null)
-        {
+        } else if (y >= 100 && origin == null) {
 
         }
-        console.info("Canvas click " + x + " " + y + " " + origin ) ;
+        console.info("Canvas click " + x + " " + y + " " + origin);
     }
 
     function initialize_UI() {
@@ -237,8 +234,8 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         }
         if (config.show_input_sequence) {
             html += "<textarea class='StarX_StarORF_input_sequence_textarea' id='" + config.sequence_id + "' style='width:100%;height:200px;border-width:1px, border-color:black'></textarea>";
-            closures.push(function() {
-                element.on('keypress', '#' + config.sequence_id , recalculate);
+            closures.push(function () {
+                element.on('keypress', '#' + config.sequence_id, recalculate);
             });
         } else {
             html += "<input class='StarX_StarORF_input_sequence_hidden' id='" + config.sequence_id + "' type='hidden'>";
@@ -313,7 +310,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
                 var y = (e.pageY - canvas.offsetTop);
                 canvas_click(x, y, null);
             });
-            element.on('mousedown','#' + config.canvas_id, function (e) {
+            element.on('mousedown', '#' + config.canvas_id, function (e) {
                 var canvas = this;
                 orig = {
                     x: (e.pageX - canvas.offsetLeft),
@@ -321,17 +318,17 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
                 }
                 return false;
             });
-            element.on('mouseup','#' + config.canvas_id, function (e) {
+            element.on('mouseup', '#' + config.canvas_id, function (e) {
                 orig = null;
                 return false;
             });
-            element.on('mousemove','#' + config.canvas_id, function (e) {
+            element.on('mousemove', '#' + config.canvas_id, function (e) {
                 if (orig != null) {
-                var canvas = this;
-                var x = (e.pageX - canvas.offsetLeft);
-                var y = (e.pageY - canvas.offsetTop);
-                canvas_click(x, y, orig);
-            }
+                    var canvas = this;
+                    var x = (e.pageX - canvas.offsetLeft);
+                    var y = (e.pageY - canvas.offsetTop);
+                    canvas_click(x, y, orig);
+                }
             });
 
         });
@@ -365,7 +362,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
     var baselineSequence = null;
     var baselineLength = 0;
     var baselineImage = null;
-        var basepairWidth = 12;
+    var basepairWidth = 12;
     var aminoacidHeight = 15;
 
 
