@@ -4,7 +4,8 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
     var decodedForward = null;
     var decodedReverse = null;
     var sequence = "";
-    var sliderValue = 0 ;
+    var sliderValue = 0;
+    var orf = {};
 
     function parse_config(config_obj) {
         config.element_id = config_obj.element_id;
@@ -22,6 +23,8 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         config.slider_id = config.element_id + "_slider";
         config.putative_orf_id = config.element_id + "_putative_orf";
         config.blast_putative_orf_id = config.element_id + "_blast_putative_orf";
+        config.all_orfs_id = config.element_id + "_all_orfs";
+
 
         config.show_input_sequence = true;
         config.show_input_sequence_title = true;
@@ -196,12 +199,32 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         sequence = trim($(this).val());
         decodedForward = decode(sequence, config.initial_minimal_orf_legth);
         decodedReverse = decode(reverseComplementString(sequence), config.initial_minimal_orf_legth);
+
+        if (config.show_slider) {
+            var scrollbar = $('#' + config.slider_id)
+            var canvas = $('#' + config.canvas_id);
+            var canvasWidth = canvas.width();
+            var sequenceWidth = (1 + sequence.length) * basepairWidth;
+            var visible = canvasWidth / sequenceWidth;
+            if (visible > 1) {
+                visible = 1;
+            }
+            var newWidth = Math.round(visible * scrollbar.width());
+            if (newWidth < 1) {
+                newWidth = 1;
+            }
+            scrollbar.slider('option', 'min', 0);
+            scrollbar.slider('option', 'max', Math.round(sequence.length - canvasWidth / basepairWidth));
+            scrollbar.slider('option', 'value', sequence.length / 4);
+            sliderValue = sequence.length / 4;
+
+        }
         paint(sequence);
     }
 
     function canvas_click(x, y, origin) {
-        if( y <= 100 )
-        {
+        if (y <= 100) {
+            // click on the whole sequence view
             var canvas = document.getElementById(config.canvas_id);
             var width = canvas.width;
             var bpi = Math.round((sequence.length - width / basepairWidth) * x / width);
@@ -211,17 +234,82 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
             if (bpi > sequence.length) {
                 bpi = sequence.length;
             }
-            console.info("Canvas click on BPI: " + bpi );
+            console.info("Canvas click on BPI: " + bpi);
             sliderValue = bpi;
             paint(sequence);
-        } else if( y >= 100 && origin != null )
-        {
+        } else if (y >= 100 && origin == null) {
+            // click to decode
+            var steps = Math.round(x / basepairWidth);
+            var bpi = sliderValue + steps - 1;
+            var row = Math.ceil((y - 135) / aminoacidHeight);
+            if (row >= 1 && row <= 3) {
+                var range = decodedForward[row - 1][bpi];
+                var putativeORF = {
+                    from: range.from,
+                    to: range.to,
+                    forward: true
+                };
+                decode_putative_ORF(putativeORF);
+                console.info("decode forward on bpi: " + bpi + " row:" + row + " " + range.from + "-" + range.to);
+            } else if (row >= 5 && row <= 7) {
+                var range = decodedReverse[row - 5][sequence.length - bpi];
+                var putativeORF = {
+                    from: range.from,
+                    to: range.to,
+                    forward: false
+                };
+                decode_putative_ORF(putativeORF);
+                console.info("decode reverse on bpi: " + bpi + " row:" + row + " " + range.from + "-" + range.to);
 
-        } else if( y >= 100 && origin == null)
-        {
+            }
+        } else if (y >= 100 && origin != null) {
+            // drag to scroll
+            var slide = x - origin.x;
+            if (Math.abs(slide) > basepairWidth) {
+                var steps = Math.round(slide / basepairWidth);
+                origin.x += steps * basepairWidth;
+                var scrollbar = $('#scrollbar');
+                sliderValue = sliderValue - steps;
+                scrollbar.slider('option', 'value', sliderValue);
+                paint(sequence);
+            }
+        }
+        console.info("Canvas click " + x + " " + y + " " + origin);
+    }
+
+    function decode_putative_ORF(putativeORF) {
+        if (putativeORF.from && putativeORF.to) {
+            var from = putativeORF.from;
+            var to = putativeORF.to;
+            var forward = putativeORF.forward;
+
+            if (!forward) {
+                sequence = reverseComplementString(sequence);
+            }
+
+            var decoded = '';
+            for (var bpi = from + 3; bpi < to; bpi += 3) {
+                var str = sequence.substring(bpi, bpi + 3);
+                var codon = CodonMap[str];
+
+                if (config.initial_letter_code_type != 3) {
+                    decoded += AminoAcids[codon].shortName;
+                } else {
+                    decoded += codon + ' ';
+
+                }
+            }
+            orf = {
+                from: from,
+                to: to,
+                forward: forward,
+                decoded: decoded
+            };
+            if (config.show_putative_orf) {
+                $q(config.putative_orf_id).html(decoded);
+            }
 
         }
-        console.info("Canvas click " + x + " " + y + " " + origin ) ;
     }
 
     function initialize_UI() {
@@ -237,8 +325,8 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         }
         if (config.show_input_sequence) {
             html += "<textarea class='StarX_StarORF_input_sequence_textarea' id='" + config.sequence_id + "' style='width:100%;height:200px;border-width:1px, border-color:black'></textarea>";
-            closures.push(function() {
-                element.on('keypress', '#' + config.sequence_id , recalculate);
+            closures.push(function () {
+                element.on('keypress', '#' + config.sequence_id, recalculate);
             });
         } else {
             html += "<input class='StarX_StarORF_input_sequence_hidden' id='" + config.sequence_id + "' type='hidden'>";
@@ -283,7 +371,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         if (config.show_calculate_all_orfs) {
             html += "<button id='" + config.calculate_all_orfs_id + "' class='StarX_StarORF_calculate_all_orfs_button'>Calculate all ORFs</button>";
             closures.push(function () {
-                $q(config.calculate_all_orfs_id).button();
+                $q(config.calculate_all_orfs_id).button().click(calculate_all_orfs);
             });
         }
         if (config.show_3_1_letter_code_toggle) {
@@ -296,9 +384,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
                     } else {
                         $q(config.toggle_3_1_letter_code_id).button('option', 'label', '1 letter code');
                     }
-//                    if (putativeORF != null) {
-//                        decodePutativeORF();
-//                    }
+                    decode_putative_ORF(orf);
                 };
                 $q(config.toggle_3_1_letter_code_id).button().click(set_toggle);
                 set_toggle();
@@ -313,7 +399,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
                 var y = (e.pageY - canvas.offsetTop);
                 canvas_click(x, y, null);
             });
-            element.on('mousedown','#' + config.canvas_id, function (e) {
+            element.on('mousedown', '#' + config.canvas_id, function (e) {
                 var canvas = this;
                 orig = {
                     x: (e.pageX - canvas.offsetLeft),
@@ -321,28 +407,34 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
                 }
                 return false;
             });
-            element.on('mouseup','#' + config.canvas_id, function (e) {
+            element.on('mouseup', '#' + config.canvas_id, function (e) {
                 orig = null;
                 return false;
             });
-            element.on('mousemove','#' + config.canvas_id, function (e) {
+            element.on('mousemove', '#' + config.canvas_id, function (e) {
                 if (orig != null) {
-                var canvas = this;
-                var x = (e.pageX - canvas.offsetLeft);
-                var y = (e.pageY - canvas.offsetTop);
-                canvas_click(x, y, orig);
-            }
+                    var canvas = this;
+                    var x = (e.pageX - canvas.offsetLeft);
+                    var y = (e.pageY - canvas.offsetTop);
+                    canvas_click(x, y, orig);
+                }
             });
 
         });
         closures.push(function () {
-            element.on('change', '#' + config.sequence_id, recalculate );
+            element.on('change', '#' + config.sequence_id, recalculate);
         });
 
         if (config.show_slider) {
             html += "<div id='" + config.slider_id + "'></div>";
             closures.push(function () {
-                $q(config.slider_id).slider();
+                var slider = $q(config.slider_id);
+                slider.slider();
+                slider.slider('option', 'slide', function (e) {
+                    var value = $(this).slider('option', 'value');
+                    sliderValue = value;
+                    paint(sequence);
+                });
             })
         }
         if (config.show_putative_orf) {
@@ -350,6 +442,20 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         }
         if (config.show_blast_putative_orf) {
             html += "<button id='" + config.blast_putative_orf_id + "'>Blast</button>";
+            closures.push(function() {
+                $q(config.blast_putative_orf_id).button().click(function() {
+                    var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY='+orf.decoded;
+                    window.open(link, 'blast');
+                });
+            })
+        }
+        if (config.show_calculate_all_orfs) {
+            html += "<div id='" + config.all_orfs_id + "'></div>";
+            closures.push(function () {
+                element.on('change', '#' + config.sequence_id, function () {
+                    $q(config.all_orfs_id).html('');
+                });
+            })
         }
         $(element).html(html);
 
@@ -365,7 +471,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
     var baselineSequence = null;
     var baselineLength = 0;
     var baselineImage = null;
-        var basepairWidth = 12;
+    var basepairWidth = 12;
     var aminoacidHeight = 15;
 
 
@@ -628,6 +734,65 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         g.fillRect(0, 0, width, 100);
     }
 
+    // calculate all orfs
+    function calculate_all_orfs() {
+        var html = '';
+        var rf = calculate_all_orfs_one_direction(sequence);
+        var rb = calculate_all_orfs_one_direction(reverseComplementString(sequence));
+        html += '<div style="background-color:rgb(225,255,225);font-weight:bold;font-size:18px;">Forward decoding</div><div style="width:100%;word-break:break-all">';
+        for (i in rf) {
+            var item = rf[i];
+            var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY=' + item.l1;
+            html += "<span style='width:600px'><b>Forward " + item.from + "-" + item.to + "</b></span> <a class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' target='blast' style='height:20px;width:125px' href='" + link + "'><span  style='font-size:12px;width:50px'> Run Blast search </span></a><br>" + ( config.initial_letter_code_type == 3 ? item.l3 : item.l1) + "<br>";
+        }
+        html += '</div>';
+        html += '<div style="background-color:rgb(225,255,225);font-weight:bold;font-size:18px;">Reverse decoding</div><div style="width:100%;word-break:break-all">';
+
+        for (i in rb) {
+            var item = rb[i];
+            var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY=' + item.l1;
+            html += "<span style='width:600px'><b>Reverse " + item.from + "-" + item.to + "</b></span> <a class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' target='blast' style='height:20px;width:125px' href='" + link + "'><span  style='font-size:12px;width:50px'> Run Blast search </span></a><br>" + ( config.initial_letter_code_type == 3 ? item.l3 : item.l1) + "<br>";
+        }
+        $q(config.all_orfs_id).html(html);
+    }
+
+    function calculate_all_orfs_one_direction(sequence) {
+        var ret = [];
+        for (var f = 0; f < 3; f++) {
+            var lastStop = 0;
+            var foundStop = false;
+            for (var bpi = f; bpi < sequence.length; bpi += 3) {
+                var str = sequence.substring(bpi, bpi + 3);
+                var codon = CodonMap[str];
+                if (codon == 'STOP') {
+                    if ((bpi - lastStop) >= (config.initial_minimal_orf_legth * 3)) {
+                        var from = lastStop;
+                        var to = bpi;
+                        var l1 = '';
+                        var l3 = '';
+                        for (var bpi = from + 3; bpi < to; bpi += 3) {
+                            var str = sequence.substring(bpi, bpi + 3);
+                            var codon = CodonMap[str];
+                            l1 += AminoAcids[codon].shortName;
+                            l3 += codon + ' ';
+                        }
+                        ret.push({
+                            from: lastStop,
+                            to: bpi,
+                            l3: l3,
+                            l1: l1
+                        });
+                    }
+                    lastStop = bpi;
+                    foundStop = true;
+                } else if (!foundStop && codon == 'MET') {
+                    lastStop = bpi;
+                    foundStop = true;
+                }
+            }
+        }
+        return ret;
+    }
 
     return {
         configure: function (config) {
