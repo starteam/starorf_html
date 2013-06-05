@@ -199,7 +199,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
 
         if (config.show_slider) {
             var scrollbar = $('#' + config.slider_id)
-            var canvas = $('#'+config.canvas_id);
+            var canvas = $('#' + config.canvas_id);
             var canvasWidth = canvas.width();
             var sequenceWidth = (1 + sequence.length) * basepairWidth;
             var visible = canvasWidth / sequenceWidth;
@@ -233,10 +233,19 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
             console.info("Canvas click on BPI: " + bpi);
             sliderValue = bpi;
             paint(sequence);
-        } else if (y >= 100 && origin != null) {
-
         } else if (y >= 100 && origin == null) {
 
+
+        } else if (y >= 100 && origin != null) {
+            var slide = x - origin.x;
+            if (Math.abs(slide) > basepairWidth) {
+                var steps = Math.round(slide / basepairWidth);
+                origin.x += steps * basepairWidth;
+                var scrollbar = $('#scrollbar');
+                sliderValue = sliderValue - steps;
+                scrollbar.slider('option', 'value', sliderValue);
+                paint(sequence);
+            }
         }
         console.info("Canvas click " + x + " " + y + " " + origin);
     }
