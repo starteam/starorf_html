@@ -23,6 +23,8 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         config.slider_id = config.element_id + "_slider";
         config.putative_orf_id = config.element_id + "_putative_orf";
         config.blast_putative_orf_id = config.element_id + "_blast_putative_orf";
+        config.all_orfs_id = config.element_id + "_all_orfs";
+
 
         config.show_input_sequence = true;
         config.show_input_sequence_title = true;
@@ -369,7 +371,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         if (config.show_calculate_all_orfs) {
             html += "<button id='" + config.calculate_all_orfs_id + "' class='StarX_StarORF_calculate_all_orfs_button'>Calculate all ORFs</button>";
             closures.push(function () {
-                $q(config.calculate_all_orfs_id).button();
+                $q(config.calculate_all_orfs_id).button().click(calculate_all_orfs);
             });
         }
         if (config.show_3_1_letter_code_toggle) {
@@ -440,6 +442,9 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         }
         if (config.show_blast_putative_orf) {
             html += "<button id='" + config.blast_putative_orf_id + "'>Blast</button>";
+        }
+        if (config.show_calculate_all_orfs) {
+            html += "<div id='" + config.all_orfs_id + "'></div>";
         }
         $(element).html(html);
 
@@ -718,6 +723,65 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
         g.fillRect(0, 0, width, 100);
     }
 
+    // calculate all orfs
+    function calculate_all_orfs() {
+        var html = '';
+        var rf = calculate_all_orfs_one_direction(sequence);
+        var rb = calculate_all_orfs_one_direction(reverseComplementString(sequence));
+        html += '<div style="background-color:rgb(225,255,225);font-weight:bold;font-size:18px;">Forward decoding</div><div style="width:100%;word-break:break-all">';
+        for (i in rf) {
+            var item = rf[i];
+            var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY=' + item.l1;
+            html += "<span style='width:600px'><b>Forward " + item.from + "-" + item.to + "</b></span> <a class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' target='blast' style='height:20px;width:125px' href='" + link + "'><span  style='font-size:12px;width:50px'> Run Blast search </span></a><br>" + ( config.initial_letter_code_type == 3 ? item.l3 : item.l1) + "<br>";
+        }
+        html += '</div>';
+        html += '<div style="background-color:rgb(225,255,225);font-weight:bold;font-size:18px;">Reverse decoding</div><div style="width:100%;word-break:break-all">';
+
+        for (i in rb) {
+            var item = rb[i];
+            var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY=' + item.l1;
+            html += "<span style='width:600px'><b>Reverse " + item.from + "-" + item.to + "</b></span> <a class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only' target='blast' style='height:20px;width:125px' href='" + link + "'><span  style='font-size:12px;width:50px'> Run Blast search </span></a><br>" + ( config.initial_letter_code_type == 3 ? item.l3 : item.l1) + "<br>";
+        }
+        $q(config.all_orfs_id).html(html);
+    }
+
+    function calculate_all_orfs_one_direction(sequence) {
+        var ret = [];
+        for (var f = 0; f < 3; f++) {
+            var lastStop = 0;
+            var foundStop = false;
+            for (var bpi = f; bpi < sequence.length; bpi += 3) {
+                var str = sequence.substring(bpi, bpi + 3);
+                var codon = CodonMap[str];
+                if (codon == 'STOP') {
+                    if ((bpi - lastStop) >= (config.initial_minimal_orf_legth * 3)) {
+                        var from = lastStop;
+                        var to = bpi;
+                        var l1 = '';
+                        var l3 = '';
+                        for (var bpi = from + 3; bpi < to; bpi += 3) {
+                            var str = sequence.substring(bpi, bpi + 3);
+                            var codon = CodonMap[str];
+                            l1 += AminoAcids[codon].shortName;
+                            l3 += codon + ' ';
+                        }
+                        ret.push({
+                            from: lastStop,
+                            to: bpi,
+                            l3: l3,
+                            l1: l1
+                        });
+                    }
+                    lastStop = bpi;
+                    foundStop = true;
+                } else if (!foundStop && codon == 'MET') {
+                    lastStop = bpi;
+                    foundStop = true;
+                }
+            }
+        }
+        return ret;
+    }
 
     return {
         configure: function (config) {
