@@ -1,4 +1,4 @@
-define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) {
+define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!StarORF/main'], function (AminoAcids, $) {
     window.starORF_jQuery_debug = $
     var config = {};
     var decodedForward = null;
@@ -375,7 +375,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui'], function (AminoAcids, $) 
             });
         }
         if (config.show_3_1_letter_code_toggle) {
-            html += "<input type='checkbox' id='" + config.toggle_3_1_letter_code_id + "' class='StarX_StarORF_toggle_3_1_letter_code'/><label style='font-size:10px' for='" + config.toggle_3_1_letter_code_id + "'>3 letter code</label>";
+            html += "<input type='checkbox' id='" + config.toggle_3_1_letter_code_id + "' class='StarX_StarORF_toggle_3_1_letter_code'/><label style='font-size:10px' for='" + config.toggle_3_1_letter_code_id + "' class='StarX_StarORF_toggle_3_1_letter_code'>3 letter code</label>";
             closures.push(function () {
                 var set_toggle = function () {
                     config.initial_letter_code_type = this.checked ? 1 : 3;
