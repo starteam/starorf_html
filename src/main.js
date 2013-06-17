@@ -1,4 +1,4 @@
-define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!StarORF/main'], function (AminoAcids, $) {
+define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!StarORF/main'], function (AminoAcids, $) {
     window.starORF_jQuery_debug = $
     var config = {};
     var decodedForward = null;
