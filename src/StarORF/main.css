@@ -1,0 +1,31 @@
+.StarX_StarORF_input_sequence_minimal_length_button {
+    font-size: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top:5px;
+    margin-bottom:5px;
+}
+
+.StarX_StarORF_reverse_complement_button {
+    font-size: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top:5px;
+    margin-bottom:5px;
+}
+
+.StarX_StarORF_calculate_all_orfs_button {
+    font-size:10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top:5px;
+    margin-bottom:5px;
+}
+
+.StarX_StarORF_toggle_3_1_letter_code {
+    font-size: 10pt;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top:5px;
+    margin-bottom:5px;
+}
