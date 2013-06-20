@@ -1,6 +1,0 @@
-[submodule "jcanvas"]
-	path = jcanvas
-	url = https://github.com/caleb531/jcanvas.git
-[submodule "jquery"]
-	path = jquery
-	url = https://github.com/jquery/jquery.git
