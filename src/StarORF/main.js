@@ -7,6 +7,14 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
     var sliderValue = 0;
     var orf = {};
 
+    function is_defined(element) {
+        return !(typeof variable === 'undefined');
+    }
+
+    function get_config(config_obj, key, default_value) {
+        return is_defined(config_obj[key]) ? config_obj[key] : default_value;
+    }
+
     function parse_config(config_obj) {
         config.element_id = config_obj.element_id;
         config.sequence = config_obj.sequence ? config_obj.sequence : "/StarORF/sequence.txt";
@@ -26,21 +34,21 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
         config.all_orfs_id = config.element_id + "_all_orfs";
 
 
-        config.show_input_sequence = true;
-        config.show_input_sequence_title = true;
-        config.show_sequence_length = true;
-        config.show_gc_percentage = true;
-        config.show_minimal_orf_length = true;
-        config.show_minimal_orf_length_button = true;
+        config.show_input_sequence = get_config(config_obj, "show_input_sequence", true);
+        config.show_input_sequence_title = get_config(config_obj, "show_input_sequence_title", true);
+        config.show_sequence_length = get_config(config_obj, "show_sequence_length", true);
+        config.show_gc_percentage = get_config(config_obj, "show_gc_percentage", true);
+        config.show_minimal_orf_length = get_config(config_obj, "show_minimal_orf_length", true);
+        config.show_minimal_orf_length_button = get_config(config_obj, "show_minimal_orf_length_button", true);
 
-        config.initial_minimal_orf_legth = 80;
-        config.show_reverse_complement = true;
-        config.show_calculate_all_orfs = true;
-        config.show_3_1_letter_code_toggle = true;
-        config.initial_letter_code_type = 3;
-        config.show_slider = true;
-        config.show_putative_orf = true;
-        config.show_blast_putative_orf = true;
+        config.initial_minimal_orf_legth = get_config(config_obj, "minimal_orf_legth", 80);
+        config.show_reverse_complement = get_config(config_obj, "show_reverse_complement", true);
+        config.show_calculate_all_orfs = get_config(config_obj, "show_calculate_all_orfs", true);
+        config.show_3_1_letter_code_toggle = get_config(config_obj, "show_3_1_letter_code_toggle", true);
+        config.initial_letter_code_type = get_config(config_obj, "initial_letter_code_type", 3);
+        config.show_slider = get_config(config_obj, "show_slider", true);
+        config.show_putative_orf = get_config(config_obj, "show_putative_orf", true);
+        config.show_blast_putative_orf = get_config(config_obj, "show_blast_putative_orf", true);
 
         config.output_selector = null;
         config.output_letter_code_type = 1;
@@ -442,9 +450,9 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
         }
         if (config.show_blast_putative_orf) {
             html += "<button id='" + config.blast_putative_orf_id + "'>Blast</button>";
-            closures.push(function() {
-                $q(config.blast_putative_orf_id).button().click(function() {
-                    var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY='+orf.decoded;
+            closures.push(function () {
+                $q(config.blast_putative_orf_id).button().click(function () {
+                    var link = 'http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE=Proteins&QUERY=' + orf.decoded;
                     window.open(link, 'blast');
                 });
             })
