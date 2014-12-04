@@ -260,12 +260,14 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
                 decode_putative_ORF(putativeORF);
                 console.info("decode forward on bpi: " + bpi + " row:" + row + " " + range.from + "-" + range.to);
             } else if (row >= 5 && row <= 7) {
-                var range = decodedReverse[row - 5][sequence.length - bpi];
+                var step = (sequence.length + 8-row)%3;
+                var range = decodedReverse[step][Math.floor(sequence.length - bpi)];
                 var putativeORF = {
                     from: range.from,
                     to: range.to,
                     forward: false
                 };
+                console.info("step is",step,putativeORF);
                 decode_putative_ORF(putativeORF);
                 console.info("decode reverse on bpi: " + bpi + " row:" + row + " " + range.from + "-" + range.to);
 
@@ -291,13 +293,14 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
             var to = putativeORF.to;
             var forward = putativeORF.forward;
 
+            var s = sequence;
             if (!forward) {
-                sequence = reverseComplementString(sequence);
+                s = reverseComplementString(sequence);
             }
 
             var decoded = '';
             for (var bpi = from + 3; bpi < to; bpi += 3) {
-                var str = sequence.substring(bpi, bpi + 3);
+                var str = s.substring(bpi, bpi + 3);
                 var codon = CodonMap[str];
 
                 if (config.initial_letter_code_type != 3) {
@@ -507,7 +510,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
         var to = Math.round((sliderValue + width / basepairWidth) / 10) * 10;
         // paint selector window
         g.fillStyle = 'rgba(0,0,0,.5)';
-        g.fillRect(from / sequence.length * width, 5, (from - to) / sequence.length * width, 70);
+        g.fillRect(to / sequence.length * width, 5, (from - to) / sequence.length * width, 70);
         g.fillStyle = '#000000';
         g.beginPath();
         g.moveTo(0, 100);
@@ -590,23 +593,26 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
             }
         }
 
+        // green
         var oldFillStyle = g.fillStyle;
         g.fillStyle = '#008000';
         for (var bpi = ((from > 3 ) ? from - 3 : 0); bpi <= to; bpi += 1) {
             var step = bpi % 3;
+            var stepr = (sequence.length-step)%3;
             if (typeof (decodedForward[step][bpi]) == 'object') {
                 var x0 = (bpi - sliderValue) * basepairWidth;
                 var y0 = 135 + step * 15 + 4;
                 g.fillRect(x0, y0, basepairWidth * 3, basepairWidth / 2);
             }
-            if (typeof (decodedReverse[step][sequence.length - bpi]) == 'object') {
-                var x0 = (bpi - sliderValue) * basepairWidth;
+            if (typeof (decodedReverse[stepr][sequence.length - bpi]) == 'object') {
+                var x0 = (bpi - sliderValue - 3) * basepairWidth ;
                 var y0 = 135 + (step + 4) * 15 + 4;
                 g.fillRect(x0, y0, basepairWidth * 3, basepairWidth / 2);
             }
 
         }
 
+        // red
         g.fillStyle = '#ff0000';
         for (var bpi = ((from > 3 ) ? from - 3 : 0); bpi <= to; bpi += 1) {
             var step = bpi % 3;
@@ -716,6 +722,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
             var decodeMap = decodedReverse[band];
             var isGreen = 0;
             var pixelIndex = 0;
+            var offset = sequence.length;
             for (var bpi = band; bpi < sequence.length; bpi += 3) {
                 pixelIndex += 3;
                 var pt = decodeMap[bpi];
@@ -725,7 +732,7 @@ define([ "StarORF/aminoacids", 'jquery', 'jquery-ui', 'css!jquery-ui-css', 'css!
                 if (pixelIndex > qq) {
                     if (isGreen > 0 && isGreen == (pixelIndex / 3)) {
                         var pixel = Math.round(bpi / sequence.length * width);
-                        g.fillRect(width - pixel, h0 + (5 + band) * step + 1, 1, h - 1);
+                        g.fillRect(width - pixel, h0 + (5 + (offset-band)%3) * step + 1, 1, h - 1);
                     }
                     isGreen = false;
                     pixelIndex = 0;
